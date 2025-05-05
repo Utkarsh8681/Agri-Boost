@@ -1,13 +1,17 @@
+// Inside Homepage.dart
+
 import 'package:agriboost/Pages/PredectedCrop.dart';
 import 'package:agriboost/Pages/PredictPage.dart';
 import 'package:agriboost/Pages/ProfilePage.dart';
-import 'package:agriboost/Pages/SocialPage.dart';
 import 'package:agriboost/Pages/WeatherPage.dart';
 import 'package:agriboost/components/PredictButton.dart';
 import 'package:agriboost/components/api.dart';
-// Removed duplicate import to resolve conflict
+import 'package:carousel_slider/carousel_slider.dart';
+// import 'package:carousel_slider/carousel_options.dart';
 import 'package:flutter/material.dart';
 import 'package:weather/weather.dart';
+
+const BaseURL = '8536cb954c9621497c798aa01fc10271';
 
 class Homepage extends StatefulWidget {
   const Homepage({super.key});
@@ -18,20 +22,45 @@ class Homepage extends StatefulWidget {
 
 class _HomepageState extends State<Homepage> {
   int _selectedIndex = 0;
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    StyledWeatherScreen(
-        cityName: "Ghaziabad"), // Ensure this matches the correct import
-    const Predictedcrops(),
-    const Profile(),
-    //  CropPredictorScreen()
-  ];
+  String currentCity = "Ghaziabad";
+  final TextEditingController locationController = TextEditingController();
+
+  final WeatherFactory wf = WeatherFactory(BaseURL);
+  Weather? _weather;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchWeather(currentCity);
+  }
+
+  void fetchWeather(String city) {
+    wf.currentWeatherByCityName(city).then((w) {
+      setState(() {
+        _weather = w;
+        currentCity = city;
+      });
+    });
+  }
+
+  List<Widget> getScreens() {
+    return [
+      HomeScreen(
+        onCityChanged: (city) => fetchWeather(city),
+        currentCity: currentCity,
+        locationController: locationController,
+      ),
+      StyledWeatherScreen(cityName: currentCity),
+      const Predictedcrops(),
+      const Profile(),
+    ];
+  }
+
   final List<String> _appBarTitles = [
     "AgriBoost",
     "Weather",
     "Crops",
     "Profile",
-    // ""
   ];
 
   void _onTabTapped(int index) {
@@ -40,139 +69,100 @@ class _HomepageState extends State<Homepage> {
     });
   }
 
-  final WeatherFactory wf = WeatherFactory(BaseURL);
-
-  Weather? _weather;
-
-  @override
-  void initState() {
-    super.initState();
-    wf.currentWeatherByCityName("Ghaziabad").then((w) {
-      setState(() {
-        _weather = w;
-      });
-    });
-  }
-
-  TextEditingController location = TextEditingController();
-
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        return false;
-      },
-      child: Scaffold(
-        backgroundColor: const Color.fromRGBO(233, 241, 241, 1),
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          leading: _appBarTitles[_selectedIndex] == "AgriBoost"
-              ? null
-              : IconButton(
-                  icon: const Icon(Icons.arrow_back,
-                      color: Colors.black), // or any icon you want
-                  onPressed: () {
-                    // Custom navigation logic
-                    Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) =>
-                                const Homepage())); // or push to another page if needed
-                  },
-                ),
-          shadowColor: Colors.grey,
-          elevation: 10,
-          title: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Text(
-              _appBarTitles[_selectedIndex],
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
-            ),
-          ),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 12.0),
-              child: Container(
-                  decoration: BoxDecoration(
-                      // color: Colors.blue[50],
-                      borderRadius: BorderRadius.circular(10)),
-                  child: const Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: Icon(Icons.more_vert),
-                  )),
-            )
-          ],
+    final _screens = getScreens();
+
+    return Scaffold(
+      backgroundColor: const Color.fromRGBO(233, 241, 241, 1),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        leading: _appBarTitles[_selectedIndex] == "AgriBoost"
+            ? null
+            : IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.black),
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const Homepage()),
+                  );
+                },
+              ),
+        title: Text(
+          _appBarTitles[_selectedIndex],
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
         ),
-        bottomNavigationBar: BottomNavigationBar(
-          selectedItemColor: Colors.black,
-          unselectedItemColor: Colors.black,
-          backgroundColor: const Color(0xfff7931A),
-          showUnselectedLabels: true,
-          showSelectedLabels: false,
-          currentIndex: _selectedIndex,
-          onTap: _onTabTapped,
-          items: [
-            BottomNavigationBarItem(
-              icon:
-                  Icon(Icons.home_outlined, color: Colors.grey[400], size: 30),
-              activeIcon: const Icon(Icons.home, color: Colors.black, size: 35),
-              label: "Home",
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.category_outlined,
-                  color: Colors.grey[400], size: 30),
-              activeIcon:
-                  const Icon(Icons.category, color: Colors.black, size: 35),
-              label: "Weather",
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.agriculture, color: Colors.grey[400], size: 30),
-              activeIcon: const Icon(Icons.mail, color: Colors.black, size: 35),
-              label: "Crops",
-            ),
-            BottomNavigationBarItem(
-              icon:
-                  Icon(Icons.person_outline, color: Colors.grey[400], size: 30),
-              activeIcon:
-                  const Icon(Icons.person, color: Colors.black, size: 35),
-              label: "Profile",
-            ),
-          ],
-        ),
-        body: _screens[_selectedIndex],
       ),
+      bottomNavigationBar: BottomNavigationBar(
+        selectedItemColor: Colors.black,
+        unselectedItemColor: Colors.black,
+        backgroundColor: const Color(0xfff7931A),
+        showUnselectedLabels: true,
+        showSelectedLabels: false,
+        currentIndex: _selectedIndex,
+        onTap: _onTabTapped,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined, size: 30),
+            activeIcon: Icon(Icons.home, size: 35),
+            label: "Home",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.category_outlined, size: 30),
+            activeIcon: Icon(Icons.category, size: 35),
+            label: "Weather",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.agriculture, size: 30),
+            activeIcon: Icon(Icons.mail, size: 35),
+            label: "Crops",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline, size: 30),
+            activeIcon: Icon(Icons.person, size: 35),
+            label: "Profile",
+          ),
+        ],
+      ),
+      body: _screens[_selectedIndex],
     );
   }
 }
 
-const BaseURL = '8536cb954c9621497c798aa01fc10271';
-
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final Function(String) onCityChanged;
+  final String currentCity;
+  final TextEditingController locationController;
+
+  const HomeScreen({
+    super.key,
+    required this.onCityChanged,
+    required this.currentCity,
+    required this.locationController,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final TextEditingController locationController = TextEditingController();
+  int _currentIndex = 0;
   late final WeatherFactory wf;
   Weather? weather;
-  String currentCity = "Ghaziabad";
 
   @override
   void initState() {
     super.initState();
     wf = WeatherFactory(BaseURL);
-    fetchWeather(currentCity);
+    fetchWeather(widget.currentCity);
   }
 
   void fetchWeather(String city) {
     wf.currentWeatherByCityName(city).then((w) {
       setState(() {
         weather = w;
-        currentCity = city;
       });
+      widget.onCityChanged(city);
     });
   }
 
@@ -181,16 +171,39 @@ class _HomeScreenState extends State<HomeScreen> {
     return SingleChildScrollView(
       child: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: SizedBox(
-              width: double.infinity,
+          CarouselSlider(
+            items: [
+              Image.asset("assets/wp.jpg"),
+              Image.asset("assets/boost.jpg"),
+              Image.asset("assets/banner_agri.jpg"),
+              Image.asset("assets/agri_banner.jpg"),
+            ],
+            options: CarouselOptions(
               height: 200,
-              child: Image.asset(
-                "assets/banner.jpg",
-                width: double.infinity,
-              ),
+              viewportFraction: 1,
+              initialPage: _currentIndex,
+              autoPlay: true,
+              onPageChanged: (index, reason) {
+                setState(() {
+                  _currentIndex = index;
+                });
+              },
             ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(4, (index) {
+              return Container(
+                width: 8,
+                height: 8,
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _currentIndex == index ? Colors.green : Colors.grey,
+                ),
+              );
+            }),
           ),
           Padding(
             padding: const EdgeInsets.all(15.0),
@@ -210,7 +223,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         return AlertDialog(
                           title: const Text("Select Location"),
                           content: TextField(
-                            controller: locationController,
+                            controller: widget.locationController,
                             decoration: const InputDecoration(
                               hintText: "Search city...",
                               suffixIcon: Icon(Icons.search),
@@ -218,15 +231,13 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           actions: [
                             TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
+                              onPressed: () => Navigator.of(context).pop(),
                               child: const Text("Cancel"),
                             ),
                             TextButton(
                               onPressed: () {
-                                if (locationController.text.isNotEmpty) {
-                                  fetchWeather(locationController.text);
+                                if (widget.locationController.text.isNotEmpty) {
+                                  fetchWeather(widget.locationController.text);
                                 }
                                 Navigator.of(context).pop();
                               },
@@ -238,32 +249,27 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   },
                   child: Container(
+                    padding: const EdgeInsets.all(12.0),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(14),
                       color: Colors.green[800],
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.location_on,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.location_on,
+                            color: Colors.white, size: 30),
+                        const SizedBox(width: 10),
+                        Text(
+                          widget.locationController.text.isNotEmpty
+                              ? widget.locationController.text
+                              : widget.currentCity,
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
                             color: Colors.white,
-                            size: 30,
                           ),
-                          const SizedBox(width: 10),
-                          Text(
-                            locationController.text.isNotEmpty
-                                ? locationController.text
-                                : "Location",
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 )
@@ -279,7 +285,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               child: Column(
                 children: [
-                  ApiFetch(cityName: currentCity),
+                  ApiFetch(cityName: widget.currentCity),
                   const SizedBox(height: 10),
                 ],
               ),

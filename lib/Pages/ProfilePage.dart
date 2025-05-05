@@ -1,11 +1,28 @@
-import 'package:agriboost/StartPages/FrontPage.dart';
 import 'package:agriboost/StartPages/SplashSceen.dart';
-import 'package:agriboost/main.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class Profile extends StatelessWidget {
   const Profile({super.key});
+
+  // Future<void> _openLink(BuildContext context, String url) async {
+  //   final Uri uri = Uri.parse(url);
+  //   try {
+  //     if (await canLaunchUrl(uri)) {
+  //       await launchUrl(uri, mode: LaunchMode.externalApplication);
+  //     } else {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(content: Text('Could not launch $url')),
+  //       );
+  //     }
+  //   } catch (e) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text('Error launching URL: $e')),
+  //     );
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +31,6 @@ class Profile extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Profile Image
             const SizedBox(height: 20),
             const CircleAvatar(
               radius: 60,
@@ -22,8 +38,6 @@ class Profile extends StatelessWidget {
                   'https://via.placeholder.com/150'), // Sample profile image
             ),
             const SizedBox(height: 10),
-
-            // User Details
             const Text(
               "Utkarsh Pal",
               style: TextStyle(
@@ -35,10 +49,7 @@ class Profile extends StatelessWidget {
               "Flutter Developer | Tech Enthusiast",
               style: TextStyle(color: Colors.grey),
             ),
-
             const Divider(thickness: 1, height: 30),
-
-            // Contact Information
             const ListTile(
               leading: Icon(Icons.email, color: Colors.green),
               title: Text('utkarsh8671@gmail.com'),
@@ -51,31 +62,52 @@ class Profile extends StatelessWidget {
               leading: Icon(Icons.location_on, color: Colors.green),
               title: Text('Ghaziabad, India'),
             ),
-
             const Divider(thickness: 1, height: 30),
 
-            // Social Media Links
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.linked_camera, color: Colors.blue),
-                  onPressed: () {}, // Add LinkedIn link
-                ),
-                IconButton(
-                  icon: const Icon(Icons.web, color: Colors.green),
-                  onPressed: () {}, // Add Portfolio link
-                ),
-                IconButton(
-                  icon: const Icon(Icons.person, color: Colors.purple),
-                  onPressed: () {}, // Add Instagram link
-                ),
-              ],
+            // Social Media Links with Builder for context
+            Builder(
+              builder: (innerContext) {
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: SvgPicture.asset(
+                        "assets/linkedin.svg",
+                        height: 30,
+                        width: 30,
+                        color: Colors.green,
+                      ),
+                      onPressed: () {
+                        // _openLink(innerContext,
+                        //     'https://www.linkedin.com/in/utkarshpal/');
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.web, color: Colors.green),
+                      onPressed: () {
+                        // _openLink(innerContext,
+                        //     'https://utflutterportfolio.netlify.app/');
+                      },
+                    ),
+                    IconButton(
+                      icon: SvgPicture.asset(
+                        "assets/instagram.svg",
+                        height: 30,
+                        width: 30,
+                        color: Colors.green,
+                      ),
+                      onPressed: () {
+                        // _openLink(innerContext,
+                        //     'https://www.instagram.com/utkarsh8671');
+                      },
+                    ),
+                  ],
+                );
+              },
             ),
 
             const SizedBox(height: 20),
 
-            // Logout Button
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40),
               child: ElevatedButton.icon(
@@ -85,8 +117,6 @@ class Profile extends StatelessWidget {
                   minimumSize: const Size(double.infinity, 50),
                 ),
                 onPressed: () async {
-                  // Add Logout functionality
-
                   await FirebaseAuth.instance.signOut();
 
                   Navigator.pushAndRemoveUntil(
@@ -102,7 +132,6 @@ class Profile extends StatelessWidget {
                 label: const Text("Logout"),
               ),
             ),
-
             const SizedBox(height: 20),
           ],
         ),
