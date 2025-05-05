@@ -5,6 +5,7 @@ import 'package:agriboost/Pages/SocialPage.dart';
 import 'package:agriboost/Pages/WeatherPage.dart';
 import 'package:agriboost/components/PredictButton.dart';
 import 'package:agriboost/components/api.dart';
+// Removed duplicate import to resolve conflict
 import 'package:flutter/material.dart';
 import 'package:weather/weather.dart';
 
@@ -19,15 +20,16 @@ class _HomepageState extends State<Homepage> {
   int _selectedIndex = 0;
   final List<Widget> _screens = [
     const HomeScreen(),
-    const Weatherpage(),
-    const Socialpage(),
+    StyledWeatherScreen(
+        cityName: "Ghaziabad"), // Ensure this matches the correct import
+    const Predictedcrops(),
     const Profile(),
     //  CropPredictorScreen()
   ];
   final List<String> _appBarTitles = [
     "AgriBoost",
     "Weather",
-    "Social",
+    "Crops",
     "Profile",
     // ""
   ];
@@ -124,9 +126,9 @@ class _HomepageState extends State<Homepage> {
               label: "Weather",
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.mail_outline, color: Colors.grey[400], size: 30),
+              icon: Icon(Icons.agriculture, color: Colors.grey[400], size: 30),
               activeIcon: const Icon(Icons.mail, color: Colors.black, size: 35),
-              label: "Social",
+              label: "Crops",
             ),
             BottomNavigationBarItem(
               icon:
@@ -143,6 +145,8 @@ class _HomepageState extends State<Homepage> {
   }
 }
 
+const BaseURL = '8536cb954c9621497c798aa01fc10271';
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -151,22 +155,29 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final TextEditingController locationController = TextEditingController();
+  late final WeatherFactory wf;
+  Weather? weather;
+  String currentCity = "Ghaziabad";
+
+  @override
+  void initState() {
+    super.initState();
+    wf = WeatherFactory(BaseURL);
+    fetchWeather(currentCity);
+  }
+
+  void fetchWeather(String city) {
+    wf.currentWeatherByCityName(city).then((w) {
+      setState(() {
+        weather = w;
+        currentCity = city;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final WeatherFactory wf = WeatherFactory(BaseURL);
-
-    Weather? weather;
-
-    @override
-    void initState() {
-      super.initState();
-      wf.currentWeatherByCityName("Ghaziabad").then((w) {
-        setState(() {
-          weather = w;
-        });
-      });
-    }
-
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -175,7 +186,6 @@ class _HomeScreenState extends State<HomeScreen> {
             child: SizedBox(
               width: double.infinity,
               height: 200,
-              // color: Colors.red, // Placeholder color
               child: Image.asset(
                 "assets/banner.jpg",
                 width: double.infinity,
@@ -187,9 +197,10 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  " Hey, Utkarsh \n It's a Clear Sky",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                Text(
+                  "Hey, Utkarsh\n${weather?.weatherDescription ?? "Fetching weather..."}",
+                  style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 GestureDetector(
                   onTap: () {
@@ -198,9 +209,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       builder: (BuildContext context) {
                         return AlertDialog(
                           title: const Text("Select Location"),
-                          content: const TextField(
-                            // controller: location,
-                            decoration: InputDecoration(
+                          content: TextField(
+                            controller: locationController,
+                            decoration: const InputDecoration(
                               hintText: "Search city...",
                               suffixIcon: Icon(Icons.search),
                             ),
@@ -208,15 +219,16 @@ class _HomeScreenState extends State<HomeScreen> {
                           actions: [
                             TextButton(
                               onPressed: () {
-                                Navigator.of(context).pop(); // Close dialog
+                                Navigator.of(context).pop();
                               },
                               child: const Text("Cancel"),
                             ),
                             TextButton(
                               onPressed: () {
-                                // location = location;
-                                print("Confirmed!"); // Perform desired action
-                                Navigator.of(context).pop(); // Close dialog
+                                if (locationController.text.isNotEmpty) {
+                                  fetchWeather(locationController.text);
+                                }
+                                Navigator.of(context).pop();
                               },
                               child: const Text("OK"),
                             ),
@@ -230,23 +242,26 @@ class _HomeScreenState extends State<HomeScreen> {
                       borderRadius: BorderRadius.circular(14),
                       color: Colors.green[800],
                     ),
-                    child: const Padding(
-                      padding: EdgeInsets.all(12.0),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
                       child: Row(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.location_on,
                             color: Colors.white,
                             size: 30,
                           ),
-                          SizedBox(
-                            width: 10,
+                          const SizedBox(width: 10),
+                          Text(
+                            locationController.text.isNotEmpty
+                                ? locationController.text
+                                : "Location",
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
-                          Text("Location",
-                              style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white)),
                         ],
                       ),
                     ),
@@ -259,15 +274,13 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.all(15.0),
             child: Container(
               decoration: BoxDecoration(
-                  color: Colors.white, borderRadius: BorderRadius.circular(20)),
-              child: const Column(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Column(
                 children: [
-                  ApiFetch(
-                    cityName: "Ghaziabad",
-                  ),
-                  SizedBox(
-                    height: 10,
-                  ),
+                  ApiFetch(cityName: currentCity),
+                  const SizedBox(height: 10),
                 ],
               ),
             ),
@@ -275,19 +288,18 @@ class _HomeScreenState extends State<HomeScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (Context) => Predictedcrops()));
-                },
-                child: const ContainerButton()),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CropPredictionScreen(),
+                  ),
+                );
+              },
+              child: const ContainerButton(),
+            ),
           ),
-          const Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [],
-          )
+          const SizedBox(height: 20),
         ],
       ),
     );

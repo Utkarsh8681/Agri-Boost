@@ -12,19 +12,44 @@ class ApiFetch extends StatefulWidget {
 
 const BaseURL = '8536cb954c9621497c798aa01fc10271';
 
+// class _ApiFetchState extends State<ApiFetch> {
+//   final WeatherFactory wf = WeatherFactory(BaseURL);
+
+//   Weather? _weather;
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     wf.currentWeatherByCityName(widget.cityName).then((w) {
+//       setState(() {
+//         _weather = w;
+//       });
+//     });
+//   }
 class _ApiFetchState extends State<ApiFetch> {
   final WeatherFactory wf = WeatherFactory(BaseURL);
-
   Weather? _weather;
 
   @override
   void initState() {
     super.initState();
-    wf.currentWeatherByCityName("Ghaziabad").then((w) {
+    wf.currentWeatherByCityName(widget.cityName).then((w) {
       setState(() {
         _weather = w;
       });
     });
+  }
+
+  @override
+  void didUpdateWidget(covariant ApiFetch oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.cityName != widget.cityName) {
+      wf.currentWeatherByCityName(widget.cityName).then((w) {
+        setState(() {
+          _weather = w;
+        });
+      });
+    }
   }
 
   @override

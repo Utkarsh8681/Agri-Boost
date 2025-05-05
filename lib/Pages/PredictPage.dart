@@ -1,85 +1,168 @@
-// import 'package:flutter/material.dart';
-// import 'package:flutter/services.dart';
-// import 'package:tflite_flutter/tflite_flutter.dart';
+import 'package:agriboost/Pages/cropDetailPage.dart';
+import 'package:agriboost/models/crops.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:tflite_flutter/tflite_flutter.dart';
 
-// class CropPredictionScreen extends StatefulWidget {
-//   @override
-//   State<CropPredictionScreen> createState() => _CropPredictionScreenState();
-// }
+class CropPredictionScreen extends StatefulWidget {
+  @override
+  _CropPredictionScreenState createState() => _CropPredictionScreenState();
+}
 
-// class _CropPredictionScreenState extends State<CropPredictionScreen> {
-//   late Interpreter interpreter;
-//   List<String> labels = [];
-//   bool modelLoaded = false;
-//   double rainfall = 1000.0;
-//   String predictionResult = '';
+class _CropPredictionScreenState extends State<CropPredictionScreen> {
+  late Interpreter interpreter;
+  List<String> labels = [];
+  final List<TextEditingController> controllers =
+      List.generate(7, (_) => TextEditingController());
 
-//   @override
-//   void initState() {
-//     super.initState();
-//     loadModelAndLabels();
-//   }
+  String prediction = '';
+  bool isInterpreterReady = false;
 
-//   Future<void> loadModelAndLabels() async {
-//     interpreter = await Interpreter.fromAsset('models/crop_model.tflite');
-//     final labelData = await rootBundle.loadString('assets/labels.txt');
-//     labels = labelData
-//         .split('\n')
-//         .map((l) => l.trim())
-//         .where((l) => l.isNotEmpty)
-//         .toList();
-//     setState(() {
-//       modelLoaded = true;
-//     });
-//   }
+  @override
+  void initState() {
+    super.initState();
+    loadModelAndLabels();
+  }
 
-//   void predictCrop() {
-//     if (!modelLoaded) return;
+  @override
+  void dispose() {
+    // Dispose controllers and interpreter
+    for (var controller in controllers) {
+      controller.dispose();
+    }
+    interpreter.close();
+    super.dispose();
+  }
 
-//     // Example: only using rainfall, fill rest of 97 inputs with 0s
-//     List<double> input = List.filled(97, 0.0);
-//     input[0] = rainfall; // You can change index depending on your model
+  Future<void> loadModelAndLabels() async {
+    try {
+      // Load the TFLite model
+      interpreter =
+          await Interpreter.fromAsset('assets/models/crop_yield.tflite');
 
-//     var inputTensor = [input];
-//     var output = List.filled(1 * 1, 0.0).reshape([1, 1]);
+      // Load the labels
+      final labelData = await rootBundle.loadString('assets/models/labels.txt');
+      labels = labelData.split('\n').where((l) => l.trim().isNotEmpty).toList();
 
-//     interpreter.run(inputTensor, output);
+      setState(() {
+        isInterpreterReady = true;
+      });
+    } catch (e) {
+      setState(() {
+        prediction = 'Error loading model or labels: $e';
+      });
+    }
+  }
 
-//     int index = output[0][0].round();
-//     if (index < labels.length) {
-//       setState(() {
-//         predictionResult = 'Recommended Crop: ${labels[index]}';
-//       });
-//     } else {
-//       setState(() {
-//         predictionResult = 'Invalid prediction index: $index';
-//       });
-//     }
-//   }
+  void predict() {
+    if (!isInterpreterReady) {
+      setState(() {
+        prediction = 'Model is still loading...';
+      });
+      return;
+    }
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: Text('Crop Predictor')),
-//       body: Padding(
-//         padding: const EdgeInsets.all(16.0),
-//         child: Column(
-//           children: [
-//             TextField(
-//               decoration: InputDecoration(labelText: 'Rainfall (mm)'),
-//               keyboardType: TextInputType.number,
-//               onChanged: (val) => rainfall = double.tryParse(val) ?? 1000.0,
-//             ),
-//             SizedBox(height: 20),
-//             ElevatedButton(
-//               onPressed: predictCrop,
-//               child: Text('Predict Crop'),
-//             ),
-//             SizedBox(height: 20),
-//             Text(predictionResult, style: TextStyle(fontSize: 18)),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
+    // Parse input values
+    List<double> input =
+        controllers.map((c) => double.tryParse(c.text) ?? 0.0).toList();
+
+    if (input.length != 7 || input.contains(0.0)) {
+      setState(() => prediction = 'Please enter all inputs correctly.');
+      return;
+    }
+
+    // Prepare input and output tensors
+    var inputTensor = [input];
+    var output = List.filled(labels.length, 0.0).reshape([1, labels.length]);
+
+    try {
+      // Run the model
+      interpreter.run(inputTensor, output);
+
+      // Get the index of the highest probability
+      int maxIndex = output[0].indexWhere(
+          (e) => e == output[0].reduce((double a, double b) => a > b ? a : b));
+
+      setState(() {
+        prediction = (maxIndex < labels.length) ? labels[maxIndex] : 'Unknown';
+      });
+    } catch (e) {
+      setState(() {
+        prediction = 'Error during prediction: $e';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final fields = [
+      'Nitrogen',
+      'Phosphorus',
+      'Potassium',
+      'Temperature',
+      'Humidity',
+      'pH',
+      'Rainfall'
+    ];
+
+    return Scaffold(
+      appBar: AppBar(title: Text('Crop Predictor')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: ListView(
+          children: [
+            ...List.generate(fields.length, (i) {
+              return TextField(
+                controller: controllers[i],
+                decoration: InputDecoration(labelText: fields[i]),
+                keyboardType: TextInputType.number,
+              );
+            }),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: isInterpreterReady ? predict : null,
+              child: Text(
+                  isInterpreterReady ? 'Predict Crop' : 'Loading model...'),
+            ),
+            SizedBox(height: 20),
+            GestureDetector(
+              onTap: () {
+                // Find the crop object based on the prediction
+                final Crop? predictedCrop = crops.firstWhere(
+                  (crop) => crop.name == prediction,
+                  orElse: () => Crop(
+                    id: '',
+                    name: '',
+                    imageUrl: '',
+                    description: '',
+                  ),
+                );
+
+                if (predictedCrop != null) {
+                  // Navigate to the Cropdetailpage with the predicted crop
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => Cropdetailpage(crop: predictedCrop),
+                    ),
+                  );
+                } else {
+                  // Handle case where the crop is not found
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content:
+                            Text('Crop details not found for $prediction')),
+                  );
+                }
+              },
+              child: Text(
+                'Prediction: $prediction',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}

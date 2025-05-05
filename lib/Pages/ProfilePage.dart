@@ -41,11 +41,11 @@ class Profile extends StatelessWidget {
             // Contact Information
             const ListTile(
               leading: Icon(Icons.email, color: Colors.green),
-              title: Text('utkarsh@example.com'),
+              title: Text('utkarsh8671@gmail.com'),
             ),
             const ListTile(
               leading: Icon(Icons.phone, color: Colors.green),
-              title: Text('+91 98765 43210'),
+              title: Text('+91 88449604331'),
             ),
             const ListTile(
               leading: Icon(Icons.location_on, color: Colors.green),
