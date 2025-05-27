@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 
 class CropPredictionScreen extends StatefulWidget {
+  const CropPredictionScreen({super.key});
+
   @override
   _CropPredictionScreenState createState() => _CropPredictionScreenState();
 }
@@ -106,7 +108,7 @@ class _CropPredictionScreenState extends State<CropPredictionScreen> {
     ];
 
     return Scaffold(
-      appBar: AppBar(title: Text('Crop Predictor')),
+      appBar: AppBar(title: const Text('Crop Predictor')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ListView(
@@ -118,17 +120,17 @@ class _CropPredictionScreenState extends State<CropPredictionScreen> {
                 keyboardType: TextInputType.number,
               );
             }),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: isInterpreterReady ? predict : null,
               child: Text(
                   isInterpreterReady ? 'Predict Crop' : 'Loading model...'),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             GestureDetector(
               onTap: () {
                 // Find the crop object based on the prediction
-                final Crop? predictedCrop = crops.firstWhere(
+                final Crop predictedCrop = crops.firstWhere(
                   (crop) => crop.name == prediction,
                   orElse: () => Crop(
                     id: '',
@@ -157,7 +159,8 @@ class _CropPredictionScreenState extends State<CropPredictionScreen> {
               },
               child: Text(
                 'Prediction: $prediction',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
             )
           ],

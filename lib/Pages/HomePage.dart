@@ -71,7 +71,7 @@ class _HomepageState extends State<Homepage> {
 
   @override
   Widget build(BuildContext context) {
-    final _screens = getScreens();
+    final screens = getScreens();
 
     return Scaffold(
       backgroundColor: const Color.fromRGBO(233, 241, 241, 1),
@@ -104,27 +104,31 @@ class _HomepageState extends State<Homepage> {
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined, size: 30),
-            activeIcon: Icon(Icons.home, size: 35),
+            activeIcon: Icon(
+              Icons.home,
+              size: 35,
+              color: Colors.green,
+            ),
             label: "Home",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.category_outlined, size: 30),
-            activeIcon: Icon(Icons.category, size: 35),
+            activeIcon: Icon(Icons.category, size: 35, color: Colors.green),
             label: "Weather",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.agriculture, size: 30),
-            activeIcon: Icon(Icons.mail, size: 35),
+            activeIcon: Icon(Icons.mail, size: 35, color: Colors.green),
             label: "Crops",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline, size: 30),
-            activeIcon: Icon(Icons.person, size: 35),
+            activeIcon: Icon(Icons.person, size: 35, color: Colors.green),
             label: "Profile",
           ),
         ],
       ),
-      body: _screens[_selectedIndex],
+      body: screens[_selectedIndex],
     );
   }
 }

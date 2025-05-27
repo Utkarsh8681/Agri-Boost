@@ -78,15 +78,13 @@ class Profile extends StatelessWidget {
                         color: Colors.green,
                       ),
                       onPressed: () {
-                        // _openLink(innerContext,
-                        //     'https://www.linkedin.com/in/utkarshpal/');
+                        launch("https://www.linkedin.com/in/utkarshpal/");
                       },
                     ),
                     IconButton(
                       icon: const Icon(Icons.web, color: Colors.green),
                       onPressed: () {
-                        // _openLink(innerContext,
-                        //     'https://utflutterportfolio.netlify.app/');
+                        launch('https://utflutterportfolio.netlify.app/');
                       },
                     ),
                     IconButton(
@@ -97,8 +95,7 @@ class Profile extends StatelessWidget {
                         color: Colors.green,
                       ),
                       onPressed: () {
-                        // _openLink(innerContext,
-                        //     'https://www.instagram.com/utkarsh8671');
+                        launch("https://www.instagram.com/utkarsh8671");
                       },
                     ),
                   ],
@@ -121,7 +118,7 @@ class Profile extends StatelessWidget {
 
                   Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (_) => SplashScreen()),
+                    MaterialPageRoute(builder: (_) => const SplashScreen()),
                     (route) => false,
                   );
                   ScaffoldMessenger.of(context).showSnackBar(

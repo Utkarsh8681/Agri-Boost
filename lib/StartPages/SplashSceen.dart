@@ -21,13 +21,13 @@ class _SplashScreenState extends State<SplashScreen> {
         // Already logged in
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => Homepage()),
+          MaterialPageRoute(builder: (_) => const Homepage()),
         );
       } else {
         // Not logged in
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => FrontPage()),
+          MaterialPageRoute(builder: (_) => const FrontPage()),
         );
       }
     });

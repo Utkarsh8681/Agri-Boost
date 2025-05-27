@@ -10,14 +10,14 @@ class Predictedcrops extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
         body: Padding(
-      padding: EdgeInsets.all(8.0),
+      padding: const EdgeInsets.all(8.0),
       child: ListView.builder(
           itemCount: crops.length,
           itemBuilder: (context, index) {
             final crop = crops[index];
             return GestureDetector(
                 onTap: () {
-                  final Crop? predictedCrop = crops.firstWhere(
+                  final Crop predictedCrop = crops.firstWhere(
                     (crop) => crop.name == crop.name,
                     orElse: () => Crop(
                       id: '',
@@ -38,7 +38,8 @@ class Predictedcrops extends StatelessWidget {
                   } else {
                     // Handle case where the crop is not found
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Crop details not found for ')),
+                      const SnackBar(
+                          content: Text('Crop details not found for ')),
                     );
                   }
                 },
